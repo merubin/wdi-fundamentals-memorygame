@@ -1,15 +1,40 @@
+/*
+*************************** Module Header *****************************
+* Module Name:style.css
+*
+*   Copyright 2016 RUBIN IT SOLUTIONS
+*   (c) RUBIN IT SOLTUIONS All Rights Reserved
+*
+*   This program code is proprietary and confidential RUBIN IT SOLUIONS Corp.
+*
+*  Author(s)
+*     Michael E. Rubin  
+*
+*   Description: Memory Game for GA WDI-DC12 Fundamentals Pre-work
+* HISTORY:
+*    9 Aug 2016 Initial Release 
+***********************************************************************
+*/
+
 h1	{
 	color:teal;
 }
+
 h2	{
 	color:gold;
 }
+
+h3	{
+	color:red;
+	font-size: 48px;
+	text-align: left;
+	margin-left: 50px; 
+}
+
 nav {
 	background-color: #808080;
 	font-family:Arial, sans-serif;
-
 }
-
 
 a {
 	background-color:#ffbf00;
@@ -28,7 +53,6 @@ nav li a {
 	
 }
 
-
 a:hover {
 	background-color:  #ee5f3c;
 }
@@ -45,49 +69,60 @@ a:hover {
  ul {
  	margin: 0;
  }
-li {
 
+li {
 	float:left;
 }
 
 .board	{
 	display:inline-block;
 	height:50%;
-	width:50%;
+	width:50%; 
 	float: left;
-	margin: 18%;
-	column-width: 50%
+	margin: 8%;
+	-webkit-column-count: 2; /* Chrome, Safari, Opera */
+    -moz-column-count: 2; /* Firefox*/
+    column-count: 2; 
+    max-width:800px; /* used to keep only two columns */
+}
 
-	/* -webkit-column-count: 2; / Chrome, Safari, Opera /
-    -moz-column-count: 2; /Firefox /
-    column-count: 3; */
+img {
+	height: 200px;
+	width: 150px;
 }
 
 .card	{
 	display:inline-block;
 	background: yellow;
+	background-image: url("../img/cbga.png");
+	background-size: cover;
 	border-style: solid;
 	border-color: black;
 	float: left;
-
 	height: 200px;
 	width: 150px;
 	border-radius: 10px;
-	margin-right: 100px;
-	margin-bottom: 100px;
-	
+	margin-right: 50px;
+	margin-bottom: 100px;	
 }
+
+#msg {
+ 	text-align: left
+ 	color:	red;
+}
+
 .name {
   color: #ff0000;
 }
+
 header {
 	text-align: center;	
 	width:50%;
 }
-footer {
 
+footer {
 	background-color: #808080;
 	text-align: center;
-    height:auto;
+    height:20px;
     clear: both;
 }

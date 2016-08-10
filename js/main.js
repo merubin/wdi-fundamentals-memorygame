@@ -1,116 +1,394 @@
-console.log("JS file is connected to HTML! Woo! Woo!");
+/*
+*************************** Module Header *****************************
+* Module Name:main.js
+*
+*   Copyright 2016 RUBIN IT SOLUTIONS
+*   (c) RUBIN IT SOLTUIONS All Rights Reserved
+*
+*   This program code is proprietary and confidential RUBIN IT SOLUIONS Corp.
+*
+*  Author(s)
+*     Michael E. Rubin  
+*
+*   Description: Memory Game for GA WDI-DC12 Fundamentals Pre-work
+* HISTORY:
+*    9 Aug 2016 Initial Release 
+***********************************************************************
+*/
 
-  /* 
-   Declare global variables
- */
+/* 
+   Declare global variables, constants
+*/
+var wins=0;
+var losses=0;
+
+const CARDBKGIMG = '<img src="img/cbga.png" alt="background image" />';
+const QUEENOFSPADESIMG = '<img src="img/qs.png" alt="Queen of Spades" />';
+const QUEENOFHEARTSIMG = '<img src="img/qh.png" alt="Queen of Hearts" />';
+const KINGOFSPADESIMG = '<img src="img/ks.png" alt="King of Spades" />';
+const KINGOFHEARTSIMG = '<img src="img/kh.png" alt="King of Hearts" />';
+const VERBOSE=true;  /* flag for additional console logging */
+const LOGLVL=1;      /* only log these  issues and lower  3 most logging 1 least logging */
+const MSGLOOSE = "  GAME OVER - Sorry You Lost!(Click Card to Replay)";
+const MSGWIN = " GAME OVER - Congratulations You Win! (Click Card to Replay)";
+const MSGERRALREADYSELECTED = " You already Picked this Card!";
+const MSGNEWGAME = " NEW GAME ";
+const MSGWINS = "Wins ";
+const MSGLOSSES = " Losses ";
+
+var cards =[ "QueenS","QueenH","kingS","kingH"];  //card name + suite indicator
+var gameOver = false;    /* flag to notify that game is over and stop checking */
+var cardsInPlay = [];
 
 
-var cardOne = "Queen", 
-	cardTwo = "Queen",
-	cardThree = "King", 
-	cardFour = "King";
-var cols,rows;
-var maxcards = 4
- 
+
+
 
 /*  Functions
 */
-var calcCols =function (numcards) {
-	
-	// must at least have 2 cards
 
-	if (numcards < 2 )  {
-		return;
-	}	
+/*******************************************************************
+* NAME :logMessage= function(logLvl,logMsg1,logMsg2,logMsg3)        
+*
+* DESCRIPTION :  Log Message to Console - Single point of logging to be able to turn on/off
+*                logging or log only certain errors based on passed in level.
+*
+* INPUTS :
+*       PARAMETERS:
+*           logLvl - Integer Depending on Level Log Message to Console Lvls = 1,2,3 3 being most detailed
+*
+*       GLOBALS :
+*            verbose - global flag to turn on/off all logging
+*
+*       RETURN :
+*           None
+* PROCESS :
+*                   [1]  check verbose flag and log level to determine whether to send msg to console
+*          
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
 
-// make cards an even number
-     
-	if ((numcards % 2 )  > 0 ) {
-		numcards--;
-	}
+var logMessage = function (logLvl,logMsg1,logMsg2,logMsg3) {
 
-// find largest number of rows that contain the number of cards
-   var rows =  numcards / 2;
-  for (  var i=rows ; i > 1; i--) {}
+  /* build error message based on defined variables */
+   var errMsg="";
+   if (typeof(logMsg1) != "undefined") {
+     var errMsg=logMsg1;
+   }
+   if (typeof(logMsg2) != "undefined") {
+     errMsg += logMsg2;
+   }
+   if (typeof(logMsg3) != "undefined") {
+     errMsg += logMsg3;
+   }
+  if (VERBOSE) {
+     if (logLvl <= LOGLVL) {
 
-}
+       console.log(errMsg);
+     }
+ 
+  } /* if verbose */
+} /* function logMessage */
 
+/*******************************************************************
+* NAME :shuffleCards = function()        
+*
+* DESCRIPTION :  Reset Match Game from previous game
+*
+* INPUTS :
+*       PARAMETERS:
+*           None
+*
+*       GLOBALS :
+*            cards
+*
+*       RETURN :
+*           Boolean - True - match found False No Match found 
+* PROCESS :
+*                   [1]  get number of times to shuffle
+*                   [2]  swap array elements 
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
+ var shuffleCards = function() {
+ var swapTimes =  Math.floor((Math.random() * 100) + 1);
+ var temp;
+ var idx1,idx2;
+
+ logMessage(2,"Shuffleing Cards "+ swapTimes + " times")
+ logMessage(2,"before = ",cards);
+
+ for (i=1; i < swapTimes;i++) {
+   idx1 = Math.floor(Math.random() * cards.length);
+   idx2 = Math.floor(Math.random() * cards.length);
+
+    temp=cards[idx1];
+    cards[idx1]=cards[idx2];
+    cards[idx2]=temp;
+ 
+
+ } 
+ 
+
+ logMessage(2,"after = ",cards);
+ return;
+} /* function shuffleCards */
+
+
+/*******************************************************************
+* NAME :resetGame = function()        
+*
+* DESCRIPTION :  Reset Match Game from previous game
+*
+* INPUTS :
+*       PARAMETERS:
+*           None
+*
+*       GLOBALS :
+*            document, cardsInPlay,gameOver,
+
+*
+*       RETURN :
+*           Boolean - True - match found False No Match found 
+* PROCESS :
+*                   [1]  re-iniatialize current cards selected
+*                   [2]  build and display won/loss record
+*                   [3]  delete card elements and rebuild again
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
+ var resetGame=function() {
+
+
+ 	  cardsInPlay = [];
+    var msgid=document.getElementById('msg');
+    var newGameMsg = MSGNEWGAME + MSGWINS + wins + MSGLOSSES+losses;
+    msgid.innerHTML = newGameMsg;
+
+    var cards = document.getElementById("game-board");
+
+    // As long as board has a child node, remove it
+    while (cards.hasChildNodes()) {   
+        cards.removeChild(cards.firstChild);
+    }
+    createBoard();
+        
+    gameOver=false;
+    return null;
+ }
+
+
+
+/*******************************************************************
+* NAME :isMatch = function(cardsInPlay)        
+*
+* DESCRIPTION :  Check that two cards have been selected
+*
+* INPUTS :
+*       PARAMETERS:
+*           cardsInPlay  Array of Strings - Input param with cards played so far
+*
+*       GLOBALS :
+*            this, document
+*
+*       RETURN :
+*           Boolean - True - match found False No Match found 
+* PROCESS :
+*                   [1]  parse strings for removal of suit
+*                   [2]  compare strings for match
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
+
+var  isMatch= function ( cardsInPlay ) {
+	logMessage(2,"cardsInPlay 1 is " + cardsInPlay[0]);
+	logMessage(2,"cardsInPlay 2 is " + cardsInPlay[1]);
+   
+ 
+    var str1 = cardsInPlay[0];
+    var str2 = cardsInPlay[1];
+    str1=str1.substr(0,str1.length-1);
+    str2=str2.substr(0,str2.length-1);
+
+    logMessage(2,str1 ,str2);
+    return str1 === str2;
+ 
+ 	
+} /* function isMatch */
+
+
+/*******************************************************************
+* NAME :isTwoCards = function()        
+*
+* DESCRIPTION :  Check that two cards have been selected
+*
+* INPUTS :
+*       PARAMETERS:
+*           None
+*
+*       GLOBALS :
+*            this, document, cardsInPlay
+*
+*       RETURN :
+*           null   
+* PROCESS :
+*                   [1]  check for valid pick must not have been previously selected
+*                   [2]  if new selection set image for card
+*                   [3]  if two cards check for match and notify win or loss  
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
+
+var isTwoCards = function() {
+      logMessage(1,"just got a click");
+ 
+      var cardName=this.getAttribute('data-card');
+      logMessage(2,"Card Selected is:"+cardName);
+      logMessage(2,"Current Image:"+this.innerHTML+ this.innerHTML.length);
+      var newimage="";
+      var currentimage=this.innerHTML;
+      
+      /* check if game is over and needs to be reset */
+      if (gameOver) {
+        resetGame();
+        return;
+      }
+
+
+      /* check to see if the current card image has already been flipped if  notify of error */
+            var validPick=true;
+      if (currentimage !="")  {
+      	logMessage(2," before background reset Current Image:"+this.innerHTML+ this.innerHTML.length);
+      	/* this.innerHTML=""; */
+      	var msgid=document.getElementById('msg');
+      	msgid.innerHTML = MSGERRALREADYSELECTED;
+
+      	logMessage(2," after background resert Current Image:"+this.innerHTML+ this.innerHTML.length);
+        validPick=false;      
+      } else {
+      switch (cardName) {
+    		case "QueenS":
+    		this.innerHTML = QUEENOFSPADESIMG;
+         			break;
+     		case "QueenH":
+     		this.innerHTML = QUEENOFHEARTSIMG;
+     				break;
+      		case "kingS":
+     		this.innerHTML = KINGOFSPADESIMG;
+      				break;
+      		case "kingH":
+      		 this.innerHTML = KINGOFHEARTSIMG;
+      				break;
+    		default:
+				break;
+
+      }/* Else Switch */
+  }
+   if (validPick) {
+  //checks to see if there are cards in play
+  // add card to array of cards in play
+  // 'this' hasn't been covered in this prework, but
+  // for now, just know it gives you access to the card the user clicked on
+  cardsInPlay.push(this.getAttribute('data-card'));
+
+  // if you have two cards in play check for a match
+  if (cardsInPlay.length === 2) {
+    gameOver=true;  /* flag for game over */
+    // pass the cardsInPlay as an argument to isMatch function
+    if (isMatch(cardsInPlay)){
+
+    	/* YOU WIN */
+    	var msgid=document.getElementById('msg');
+      	msgid.innerHTML = MSGWIN;
+        wins++;
+
+    } else {
+    	/* YOU LOSE */
+        var msgid=document.getElementById('msg');
+      	msgid.innerHTML = MSGLOOSE;
+        losses++;
+    }
+
+    // clear cards in play array for next try
+    /* sleep(10000);
+    resetGame(); */
+  
+
+  } /* if 2 cards */
+  } /* validPick */
+ return null;
+} /* fuction isTwoCards */
+
+
+
+/*******************************************************************
+* NAME :createBoard = function()        
+*
+* DESCRIPTION :  Create the board of cards
+*
+* INPUTS :
+*       PARAMETERS:
+*           None
+*       GLOBALS :
+*            document
+*
+*       RETURN :
+*           Boolean - True - match found False No Match found 
+* PROCESS :
+*                   [1]  create the card elements for class
+*                   [2]  register click listener for clicking on cards
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
 var createBoard = function () {
 
 
+  var gameboardid=document.getElementById('game-board');
 
-console.log(" cardOne == cardTwo ", cardOne == cardTwo);
-console.log(" cardOne == cardFour", cardOne == cardFour);
+  shuffleCards();   /* shuffle the cards   */
+  for (var i=0; i < cards.length; i++ ) {
+  	var newcard = document.createElement('div');
+  	newcard.className='card';
+  	newcard.setAttribute('data-card', cards[i]);
+  	newcard.innerHTML="";
+  	gameboardid.appendChild(newcard);
 
-var gameboardid=document.getElementById('game-board');
+  }/* for */
 
-/* calcCols(maxcards); */
-for (var i=0;i<maxcards;i++ ) {
-	var newcard = document.createElement('div');
-	newcard.className='card';
-	gameboardid.appendChild(newcard);
-}
 
-}
+   var cardList = document.getElementsByClassName("card");
+   for ( var i=0; i < cards.length; i++) {
+    cardList[i].addEventListener('click', isTwoCards); 
+   } /* for i */ 
+  
+
+
+}/* function createBoard */
 
 
 /*   MAIN LINE STARTS HERER */
-console.log(" BEGIN HERE");
+
+
+logMessage(3," BEGIN HERE");
 createBoard();
-/*
-5 ) Assuming your memory card game consists of four cards, create a for loop that makes an HTML element for each card. Each HTML element should be a div. Each element should also have the class card (this will help when you add CSS).
-
-6 ) Append each newly created card to the div that has the class board
-
-Create functions to organize your code
-
-7 ) Create a function called createBoard in your Javascript file. This function will eventually create the HTML for your cards. It will then append the resulting HTML to your div that has the class board.
-
-8 ) Inside of your createBoard function, you need to...
-
-9 ) Create a for loop that will iterate four times.
-
-10 ) For each iteration in your loop, you will create the required HTML for each card using Javascript.
-
-11 ) You will then append this HTML to the board. All of this logic should be inside the for loop.
-
-12 ) Once you've completed that, you will execute/fire your createBoard function so it runs!
-
-13) Once you've done that, your board will be created! Be sure to check your page in a web browser to verify that everything works as intended!
-
-*/
 
 
-
-/*
-if (cardOne === cardTwo) {
-	alert("You found a match! (cardOne = cardTwo) " + cardOne + " " + cardTwo);
-} else {
-	alert ("Sorry, try again. cardOne <> cardTwo " + cardOne + " " + cardTwo);
-}
-if (cardOne === cardThree) {
-	alert("You found a match! (cardOne = cardThree) " + cardOne + " " + cardThree);
-} else {
-	alert ("Sorry, try again. cardOne <> cardThree " + cardOne + " " + cardThree);
-}
-if (cardThree === cardFour) {
-	alert("You found a match! (cardThree = cardFour) " + cardThree + " " + cardFour);
-} else {
-	alert ("Sorry, try again. cardThree <> cardFour " + cardThree + " " + cardFour );
-}
-if (cardTwo === cardThree) {
-	alert("You found a match! (cardTwo= cardThree) " + cardTwo + " " + cardThree );
-} else {
-	alert ("Sorry, try again. cardTwo <> cardThree " + cardTwo + " " + cardThree );
-}
-if (cardTwo === cardFour) {
-	alert("You found a match! (cardTwo= cardFour) " + cardTwo + " " + cardFour );
-} else {
-	alert ("Sorry, try again. cardTwo <> cardFour " + cardTwo + " " + cardFour);
-}
-if (cardThree === cardFour) {
-	alert("You found a match! (cardThree= cardFour) " + cardThree + " " + cardFour);
-} else {
-	alert ("Sorry, try again. cardThree <> cardFour " + cardThree + " " + cardFour);
-}
- */
