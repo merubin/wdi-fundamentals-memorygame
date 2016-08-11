@@ -12,7 +12,7 @@
 *
 *   Description: Memory Game for GA WDI-DC12 Fundamentals Pre-work
 * HISTORY:
-*    9 Aug 2016 Initial Release 
+*    12 Aug 2016 Initial Release 
 ***********************************************************************
 */
 
@@ -22,19 +22,27 @@
 var wins=0;
 var losses=0;
 
+
+/* CSS TAGS CLASSES ETC */
+const CSSDIV = 'div'
+const CSSMSGLINE = 'msg';
+const CSSSCORELINE = 'score';
+const DATACARDATT = 'data-card'
 const CARDBKGIMG = '<img src="img/cbga.png" alt="background image" />';
 const QUEENOFSPADESIMG = '<img src="img/qs.png" alt="Queen of Spades" />';
 const QUEENOFHEARTSIMG = '<img src="img/qh.png" alt="Queen of Hearts" />';
 const KINGOFSPADESIMG = '<img src="img/ks.png" alt="King of Spades" />';
 const KINGOFHEARTSIMG = '<img src="img/kh.png" alt="King of Hearts" />';
 const VERBOSE=true;  /* flag for additional console logging */
-const LOGLVL=1;      /* only log these  issues and lower  3 most logging 1 least logging */
+const LOGLVL=2;      /* only log these  issues and lower  3 most logging 1 least logging */
 const MSGLOOSE = "  GAME OVER - Sorry You Lost!(Click Card to Replay)";
 const MSGWIN = " GAME OVER - Congratulations You Win! (Click Card to Replay)";
 const MSGERRALREADYSELECTED = " You already Picked this Card!";
-const MSGNEWGAME = " NEW GAME ";
-const MSGWINS = "Wins ";
-const MSGLOSSES = " Losses ";
+const MSGNEWGAME = " NEW GAME- Pick your first card -Click on Card- ";
+const MSGPICK2 = " GAME IN PROGRESS - Pick your second card -Click on new Card to Match First Card"
+const MSGWINS = " WON ";
+const MSGLOSSES = " LOSS ";
+const MSGGAMESPLAYED = "TOTAL GAMES:";
 
 var cards =[ "QueenS","QueenH","kingS","kingH"];  //card name + suite indicator
 var gameOver = false;    /* flag to notify that game is over and stop checking */
@@ -44,7 +52,8 @@ var cardsInPlay = [];
 
 
 
-/*  Functions
+/*  
+  Functions Declarations
 */
 
 /*******************************************************************
@@ -93,6 +102,49 @@ var logMessage = function (logLvl,logMsg1,logMsg2,logMsg3) {
  
   } /* if verbose */
 } /* function logMessage */
+
+
+/*******************************************************************
+* NAME :updateScoreboard = function()        
+*
+* DESCRIPTION :  update screen scoreboard
+*
+* INPUTS :
+*       PARAMETERS:
+*           None
+*
+*       GLOBALS :
+*            cards
+*
+*       RETURN :
+*           None
+* PROCESS :
+*                   [1]  build current win/loss score message
+*                   [2]  update score element on page
+*
+* NOTES :           
+*                   
+* CHANGES :
+*
+*/
+var updateScoreboard = function() {
+
+ var currentScoreMsg = MSGGAMESPLAYED + (wins+losses) + MSGWINS + wins + MSGLOSSES+losses;
+
+
+     logMessage(2,currentScoreMsg);
+
+
+var msgScore = document.getElementById(CSSSCORELINE);
+msgScore.innerHTML = currentScoreMsg;
+
+return null;
+
+} /* function updateScoreboard */
+
+
+
+
 
 /*******************************************************************
 * NAME :shuffleCards = function()        
@@ -169,11 +221,16 @@ var logMessage = function (logLvl,logMsg1,logMsg2,logMsg3) {
 */
  var resetGame=function() {
 
+ 	  cardsInPlay = [];  
 
- 	  cardsInPlay = [];
-    var msgid=document.getElementById('msg');
-    var newGameMsg = MSGNEWGAME + MSGWINS + wins + MSGLOSSES+losses;
+
+    var newGameMsg = MSGNEWGAME ;
+     logMessage(2,newGameMsg);
+
+
+    var msgid = document.getElementById(CSSMSGLINE);
     msgid.innerHTML = newGameMsg;
+
 
     var cards = document.getElementById("game-board");
 
@@ -181,8 +238,8 @@ var logMessage = function (logLvl,logMsg1,logMsg2,logMsg3) {
     while (cards.hasChildNodes()) {   
         cards.removeChild(cards.firstChild);
     }
-    createBoard();
-        
+    createBoard();   // recreate game board
+    updateScoreboard();     
     gameOver=false;
     return null;
  }
@@ -258,7 +315,7 @@ var  isMatch= function ( cardsInPlay ) {
 var isTwoCards = function() {
       logMessage(1,"just got a click");
  
-      var cardName=this.getAttribute('data-card');
+      var cardName=this.getAttribute(DATACARDATT);
       logMessage(2,"Card Selected is:"+cardName);
       logMessage(2,"Current Image:"+this.innerHTML+ this.innerHTML.length);
       var newimage="";
@@ -276,7 +333,7 @@ var isTwoCards = function() {
       if (currentimage !="")  {
       	logMessage(2," before background reset Current Image:"+this.innerHTML+ this.innerHTML.length);
       	/* this.innerHTML=""; */
-      	var msgid=document.getElementById('msg');
+      	var msgid=document.getElementById(CSSMSGLINE);
       	msgid.innerHTML = MSGERRALREADYSELECTED;
 
       	logMessage(2," after background resert Current Image:"+this.innerHTML+ this.innerHTML.length);
@@ -305,7 +362,7 @@ var isTwoCards = function() {
   // add card to array of cards in play
   // 'this' hasn't been covered in this prework, but
   // for now, just know it gives you access to the card the user clicked on
-  cardsInPlay.push(this.getAttribute('data-card'));
+  cardsInPlay.push(this.getAttribute(DATACARDATT));
 
   // if you have two cards in play check for a match
   if (cardsInPlay.length === 2) {
@@ -314,23 +371,27 @@ var isTwoCards = function() {
     if (isMatch(cardsInPlay)){
 
     	/* YOU WIN */
-    	var msgid=document.getElementById('msg');
+    	var msgid=document.getElementById(CSSMSGLINE);
       	msgid.innerHTML = MSGWIN;
         wins++;
 
     } else {
     	/* YOU LOSE */
-        var msgid=document.getElementById('msg');
+        var msgid=document.getElementById(CSSMSGLINE);
       	msgid.innerHTML = MSGLOOSE;
         losses++;
     }
 
-    // clear cards in play array for next try
-    /* sleep(10000);
-    resetGame(); */
-  
+    /* win or loss now update the scoreboard */
+    updateScoreboard ();
 
   } /* if 2 cards */
+  else {
+    /* pick second card * update message */
+    var msgid=document.getElementById(CSSMSGLINE);
+        msgid.innerHTML = MSGPICK2;
+
+  }
   } /* validPick */
  return null;
 } /* fuction isTwoCards */
@@ -366,9 +427,9 @@ var createBoard = function () {
 
   shuffleCards();   /* shuffle the cards   */
   for (var i=0; i < cards.length; i++ ) {
-  	var newcard = document.createElement('div');
+  	var newcard = document.createElement(CSSDIV);
   	newcard.className='card';
-  	newcard.setAttribute('data-card', cards[i]);
+  	newcard.setAttribute(DATACARDATT, cards[i]);
   	newcard.innerHTML="";
   	gameboardid.appendChild(newcard);
 
@@ -389,6 +450,7 @@ var createBoard = function () {
 
 
 logMessage(3," BEGIN HERE");
-createBoard();
+resetGame ();
+
 
 
